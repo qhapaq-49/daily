@@ -1,4 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="100" fill="#FF9EB5"/>
-  <text x="256" y="340" font-size="280" text-anchor="middle" font-family="sans-serif">⭐</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#FFB3D1"/>
+      <stop offset="100%" stop-color="#C580FF"/>
+    </radialGradient>
+    <radialGradient id="face" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFE0EE"/>
+      <stop offset="100%" stop-color="#FFB3D1"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)"/>
+
+  <!-- Ears -->
+  <circle cx="168" cy="152" r="68" fill="#FFB3D1"/>
+  <circle cx="344" cy="152" r="68" fill="#FFB3D1"/>
+  <circle cx="168" cy="152" r="40" fill="#FF8FAB"/>
+  <circle cx="344" cy="152" r="40" fill="#FF8FAB"/>
+
+  <!-- Face -->
+  <circle cx="256" cy="292" r="168" fill="url(#face)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="198" cy="258" rx="28" ry="33" fill="#3D1F3D"/>
+  <ellipse cx="314" cy="258" rx="28" ry="33" fill="#3D1F3D"/>
+  <!-- Eye shine -->
+  <circle cx="210" cy="246" r="10" fill="white"/>
+  <circle cx="326" cy="246" r="10" fill="white"/>
+
+  <!-- Nose -->
+  <ellipse cx="256" cy="312" rx="15" ry="11" fill="#FF6B9D"/>
+
+  <!-- Mouth -->
+  <path d="M222 334 Q256 360 290 334" stroke="#3D1F3D" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Blush -->
+  <ellipse cx="162" cy="324" rx="38" ry="26" fill="#FF8FAB" opacity="0.45"/>
+  <ellipse cx="350" cy="324" rx="38" ry="26" fill="#FF8FAB" opacity="0.45"/>
+
+  <!-- Sparkle top-right -->
+  <g transform="translate(408,108)">
+    <rect x="-5" y="-24" width="10" height="48" rx="5" fill="white" opacity="0.88"/>
+    <rect x="-24" y="-5" width="48" height="10" rx="5" fill="white" opacity="0.88"/>
+  </g>
+
+  <!-- Star bottom-left -->
+  <g transform="translate(98,408)">
+    <polygon points="0,-26 6,-10 24,-10 11,2 16,20 0,10 -16,20 -11,2 -24,-10 -6,-10" fill="white" opacity="0.78"/>
+  </g>
+
+  <!-- Small dots -->
+  <circle cx="108" cy="135" r="13" fill="white" opacity="0.55"/>
+  <circle cx="418" cy="408" r="9" fill="white" opacity="0.5"/>
 </svg>
