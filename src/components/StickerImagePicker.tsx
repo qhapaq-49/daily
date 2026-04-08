@@ -13,10 +13,14 @@ type Tab = 'emoji' | 'assets' | 'url' | 'upload';
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  assets?: string[];   // override default STICKER_ASSETS
+  presetEmojis?: string[];  // override default emoji list
 }
 
-export default function StickerImagePicker({ value, onChange }: Props) {
-  const [tab, setTab] = useState<Tab>(STICKER_ASSETS.length > 0 ? 'assets' : 'emoji');
+export default function StickerImagePicker({ value, onChange, assets, presetEmojis }: Props) {
+  const resolvedAssets = assets ?? STICKER_ASSETS;
+  const resolvedEmojis = presetEmojis ?? PRESET_EMOJIS;
+  const [tab, setTab] = useState<Tab>(resolvedAssets.length > 0 ? 'assets' : 'emoji');
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +59,7 @@ export default function StickerImagePicker({ value, onChange }: Props) {
   };
 
   const TABS: { id: Tab; label: string }[] = [
-    ...(STICKER_ASSETS.length > 0 ? [{ id: 'assets' as Tab, label: '画像' }] : []),
+    ...(resolvedAssets.length > 0 ? [{ id: 'assets' as Tab, label: '画像' }] : []),
     { id: 'emoji', label: '絵文字' },
     { id: 'url', label: 'URL' },
     { id: 'upload', label: '端末から' },
@@ -92,15 +96,14 @@ export default function StickerImagePicker({ value, onChange }: Props) {
       {/* Asset image grid */}
       {tab === 'assets' && (
         <div>
-          {STICKER_ASSETS.length === 0 ? (
+          {resolvedAssets.length === 0 ? (
             <div className="text-center py-6 text-gray-400 text-sm">
               <p className="text-2xl mb-2">📂</p>
-              <p><code className="bg-gray-100 px-1 rounded">src/assets/stickers/</code> に</p>
-              <p>画像ファイルを置いてビルドしてください</p>
+              <p>画像ファイルを追加してビルドしてください</p>
             </div>
           ) : (
             <div className="grid grid-cols-5 gap-2">
-              {STICKER_ASSETS.map((src, i) => (
+              {resolvedAssets.map((src, i) => (
                 <button
                   key={i}
                   onClick={() => onChange(src)}
@@ -119,7 +122,7 @@ export default function StickerImagePicker({ value, onChange }: Props) {
       {/* Emoji grid */}
       {tab === 'emoji' && (
         <div className="grid grid-cols-8 gap-2">
-          {PRESET_EMOJIS.map(e => (
+          {resolvedEmojis.map(e => (
             <button
               key={e}
               onClick={() => onChange(e)}

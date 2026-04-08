@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import Modal from './Modal';
+import StickerImagePicker from './StickerImagePicker';
+import StickerImg from './StickerImg';
 import { useApp } from '../context';
 import type { Child } from '../types';
 import { AVATAR_ASSETS } from '../utils/assetImages';
-import StickerImg from './StickerImg';
 
 const COLORS = ['#FF9EB5', '#C9A0FF', '#A0C4FF', '#6EE7B7', '#FDE68A', '#FDBA74'];
 const AVATAR_EMOJIS = ['👧', '👦', '🧒', '👶', '🐱', '🐰', '🦊', '🐼', '🐨', '🦁', '🐸', '🐯'];
+
+function isImage(s: string) {
+  return s.startsWith('data:') || s.startsWith('http');
+}
 
 interface Props {
   onClose: () => void;
@@ -18,6 +23,7 @@ export default function CreateChildModal({ onClose, editChild }: Props) {
   const [name, setName] = useState(editChild?.name ?? '');
   const [color, setColor] = useState(editChild?.color ?? COLORS[0]);
   const [emoji, setEmoji] = useState(editChild?.emoji ?? '👧');
+  const [step, setStep] = useState<'main' | 'avatar'>('main');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleSubmit = () => {
@@ -56,6 +62,32 @@ export default function CreateChildModal({ onClose, editChild }: Props) {
     );
   }
 
+  if (step === 'avatar') {
+    return (
+      <Modal onClose={onClose}>
+        <button
+          onClick={() => setStep('main')}
+          className="flex items-center gap-1 text-gray-400 text-sm mb-4"
+        >
+          ‹ もどる
+        </button>
+        <h2 className="text-xl font-bold text-center text-gray-800 mb-4">顔アイコンを選ぼう 🎀</h2>
+        <StickerImagePicker
+          value={emoji}
+          onChange={setEmoji}
+          assets={AVATAR_ASSETS}
+          presetEmojis={AVATAR_EMOJIS}
+        />
+        <button
+          onClick={() => setStep('main')}
+          className="w-full mt-5 py-4 rounded-2xl bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold text-lg active:scale-95 transition-transform"
+        >
+          決定 ✨
+        </button>
+      </Modal>
+    );
+  }
+
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
@@ -78,38 +110,20 @@ export default function CreateChildModal({ onClose, editChild }: Props) {
       {/* Avatar */}
       <div className="mb-5">
         <label className="text-sm font-bold text-gray-500 mb-2 block">アバター</label>
-        {/* Emoji options */}
-        <div className="flex flex-wrap gap-2 mb-2">
-          {AVATAR_EMOJIS.map(e => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => setEmoji(e)}
-              className={`text-2xl w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all active:scale-90 ${
-                emoji === e ? 'border-pink-400 bg-pink-50 scale-110' : 'border-gray-200 bg-white'
-              }`}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-        {/* Image options from src/assets/avatars/ */}
-        {AVATAR_ASSETS.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {AVATAR_ASSETS.map((src, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setEmoji(src)}
-                className={`w-12 h-12 rounded-2xl overflow-hidden border-2 transition-all active:scale-90 ${
-                  emoji === src ? 'border-pink-400 scale-110' : 'border-gray-200'
-                }`}
-              >
-                <StickerImg src={src} className="w-full h-full object-cover" />
-              </button>
-            ))}
+        <button
+          onClick={() => setStep('avatar')}
+          className="flex items-center gap-3 w-full border-2 border-gray-200 rounded-2xl px-4 py-3 hover:border-pink-300 transition-colors active:scale-95"
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-pink-50 flex-shrink-0">
+            {isImage(emoji) ? (
+              <StickerImg src={emoji} className="w-full h-full object-cover rounded-xl" />
+            ) : (
+              <span className="text-2xl">{emoji}</span>
+            )}
           </div>
-        )}
+          <span className="text-gray-500 text-sm">タップして変更</span>
+          <span className="ml-auto text-gray-300">›</span>
+        </button>
       </div>
 
       {/* Color */}

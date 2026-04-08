@@ -42,7 +42,6 @@ function ChildCard({ child, onClick, onEdit }: {
           <p className="text-white/80 text-xs mt-1">今月 {thisMonthEntries}枚 ⭐</p>
         </div>
       </div>
-      {/* Edit button */}
       <button
         onClick={onEdit}
         className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/30 flex items-center justify-center text-sm text-white hover:bg-white/50 transition-colors"
@@ -53,11 +52,60 @@ function ChildCard({ child, onClick, onEdit }: {
   );
 }
 
+function useSeedTestData() {
+  const { addChild, addBook, addEntry } = useApp();
+
+  return () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    // Add child directly via context (reuse addChild which generates its own id,
+    // but we need the id for books — so we call addChild and look it up after,
+    // or use a workaround: add child first then grab the last one)
+    addChild({ name: 'テストさん', color: '#A0C4FF', emoji: '🧒' });
+
+    // We can't get the id from addChild directly, so schedule books after React state updates
+    // Instead, generate id manually and bypass — but addChild doesn't accept id.
+    // Workaround: use setTimeout to read the new child from localStorage after state settles.
+    setTimeout(() => {
+      const raw = localStorage.getItem('sticker-app-v1');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const child = data.children.find((c: Child) => c.name === 'テストさん');
+      if (!child) return;
+
+      addBook({ childId: child.id, name: '歯磨き', stickerImage: '🦷', color: '#A0C4FF' });
+      addBook({ childId: child.id, name: '宿題', stickerImage: '📚', color: '#C9A0FF' });
+      addBook({ childId: child.id, name: '早起き', stickerImage: '☀️', color: '#FDE68A' });
+
+      setTimeout(() => {
+        const raw2 = localStorage.getItem('sticker-app-v1');
+        if (!raw2) return;
+        const data2 = JSON.parse(raw2);
+        const books = data2.books.filter((b: { childId: string }) => b.childId === child.id);
+
+        // Add entries: scattered days in current month
+        const daysToMark = [1, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 20];
+        books.forEach((book: { id: string }) => {
+          daysToMark
+            .filter(d => d <= now.getDate())
+            .forEach(d => {
+              addEntry(book.id, `${y}-${pad(m)}-${pad(d)}`);
+            });
+        });
+      }, 100);
+    }, 100);
+  };
+}
+
 export default function HomeScreen() {
   const { data } = useApp();
   const navigate = useNavigate();
   const [showAdd, setShowAdd] = useState(false);
   const [editChild, setEditChild] = useState<Child | undefined>();
+  const seedTestData = useSeedTestData();
 
   return (
     <div className="min-h-dvh" style={{ background: 'linear-gradient(160deg, #fce4ec 0%, #f3e5f5 50%, #e8f4fd 100%)' }}>
@@ -97,7 +145,6 @@ export default function HomeScreen() {
           </div>
         )}
 
-        {/* Add child button */}
         <motion.button
           onClick={() => setShowAdd(true)}
           className="w-full py-4 rounded-2xl border-2 border-dashed border-pink-300 text-pink-500 font-bold text-lg hover:bg-pink-50 transition-colors active:scale-95"
@@ -105,9 +152,16 @@ export default function HomeScreen() {
         >
           ＋ 子どもを追加
         </motion.button>
+
+        {/* Test data button */}
+        <button
+          onClick={seedTestData}
+          className="w-full mt-3 py-2 text-gray-300 text-xs"
+        >
+          テストデータを追加
+        </button>
       </div>
 
-      {/* Modals */}
       {showAdd && <CreateChildModal onClose={() => setShowAdd(false)} />}
       {editChild && (
         <CreateChildModal
