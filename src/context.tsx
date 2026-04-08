@@ -4,7 +4,7 @@ import type { AppData, Child, StickerBook, StickerEntry } from './types';
 
 const STORAGE_KEY = 'sticker-app-v1';
 
-function loadData(): AppData {
+export function loadData(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { children: [], books: [], entries: [] };
@@ -14,8 +14,12 @@ function loadData(): AppData {
   }
 }
 
-function saveData(data: AppData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+export function saveData(data: AppData) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('データの保存に失敗しました:', e);
+  }
 }
 
 type Action =
@@ -29,7 +33,7 @@ type Action =
   | { type: 'REMOVE_ENTRY'; payload: string }
   | { type: 'UPDATE_ENTRY'; payload: StickerEntry };
 
-function reducer(state: AppData, action: Action): AppData {
+export function reducer(state: AppData, action: Action): AppData {
   switch (action.type) {
     case 'ADD_CHILD':
       return { ...state, children: [...state.children, action.payload] };

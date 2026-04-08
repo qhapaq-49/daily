@@ -3,17 +3,20 @@ import { AppProvider } from './context';
 import HomeScreen from './screens/HomeScreen';
 import ChildScreen from './screens/ChildScreen';
 import BookScreen from './screens/BookScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
   return (
-    <AppProvider>
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/child/:childId" element={<ChildScreen />} />
-          <Route path="/book/:bookId" element={<BookScreen />} />
-        </Routes>
-      </HashRouter>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/child/:childId" element={<ChildScreen />} />
+            <Route path="/book/:bookId" element={<BookScreen />} />
+          </Routes>
+        </HashRouter>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

@@ -2,6 +2,27 @@ import { useState, useRef } from 'react';
 import { STICKER_ASSETS } from '../utils/assetImages';
 import StickerImg from './StickerImg';
 
+// Resize image to at most maxDim×maxDim to keep localStorage usage small
+async function compressImage(dataUrl: string, maxDim = 300, quality = 0.82): Promise<string> {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.width <= maxDim && img.height <= maxDim) {
+        resolve(dataUrl);
+        return;
+      }
+      const ratio = Math.min(maxDim / img.width, maxDim / img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 const PRESET_EMOJIS = [
   '⭐','🌟','💫','✨','🌈','🦄','🎀','💖','🎉','🏆',
   '🥇','🌸','🍓','🎂','🍦','🌺','🦋','🐱','🐶','🐰',
@@ -39,8 +60,9 @@ export default function StickerImagePicker({ value, onChange, assets, presetEmoj
       const blob = await res.blob();
       if (!blob.type.startsWith('image/')) throw new Error();
       const reader = new FileReader();
-      reader.onload = e => {
-        onChange(e.target?.result as string);
+      reader.onload = async e => {
+        const compressed = await compressImage(e.target?.result as string);
+        onChange(compressed);
         setLoading(false);
       };
       reader.readAsDataURL(blob);
@@ -54,7 +76,10 @@ export default function StickerImagePicker({ value, onChange, assets, presetEmoj
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => onChange(ev.target?.result as string);
+    reader.onload = async ev => {
+      const compressed = await compressImage(ev.target?.result as string);
+      onChange(compressed);
+    };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
