@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: #fdf0f8;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+    margin: 0;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  .font-rounded {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
