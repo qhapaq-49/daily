@@ -6,6 +6,7 @@ import CreateBookModal from '../components/CreateBookModal';
 import CreateChildModal from '../components/CreateChildModal';
 import ExportModal from '../components/ExportModal';
 import StickerImg from '../components/StickerImg';
+import { calcStreak, calcBestStreak, calcThisMonth, calcLastMonth, calcTotal } from '../utils/statsUtils';
 import type { StickerBook } from '../types';
 
 function isImage(s: string) {
@@ -81,6 +82,13 @@ export default function ChildScreen() {
     return null;
   }
 
+  const thisMonth = calcThisMonth(data, child.id);
+  const lastMonth = calcLastMonth(data, child.id);
+  const streak = calcStreak(data, child.id);
+  const bestStreak = calcBestStreak(data, child.id);
+  const total = calcTotal(data, child.id);
+  const monthDiff = thisMonth - lastMonth;
+
   return (
     <div className="min-h-dvh" style={{ background: 'linear-gradient(160deg, #fce4ec 0%, #f3e5f5 50%, #e8f4fd 100%)' }}>
       {/* Header */}
@@ -115,6 +123,52 @@ export default function ChildScreen() {
             ✏️
           </button>
         </div>
+      </div>
+
+      {/* Stats cards */}
+      <div className="px-5 pt-4 pb-2 flex gap-3 overflow-x-auto pb-3 no-scrollbar">
+        {/* 今月 */}
+        <motion.div
+          className="flex-shrink-0 rounded-3xl p-4 text-center shadow-md min-w-[120px]"
+          style={{ background: `linear-gradient(135deg, ${child.color}, ${child.color}99)` }}
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0 }}
+        >
+          <p className="text-white/80 text-xs font-bold mb-1">今月のシール</p>
+          <p className="text-white font-extrabold text-5xl leading-none">{thisMonth}</p>
+          <p className="text-white/70 text-xs mt-1">
+            {monthDiff > 0 ? `先月より +${monthDiff} 🔺` : monthDiff < 0 ? `先月より ${monthDiff} 🔻` : '先月と同じ'}
+          </p>
+        </motion.div>
+
+        {/* 連続記録 */}
+        <motion.div
+          className="flex-shrink-0 bg-white rounded-3xl p-4 text-center shadow-md min-w-[120px]"
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.05 }}
+        >
+          <p className="text-gray-400 text-xs font-bold mb-1">🔥 連続記録</p>
+          <p className="text-orange-500 font-extrabold text-5xl leading-none">{streak}</p>
+          <p className="text-gray-400 text-xs mt-1">日つづいてるよ！</p>
+        </motion.div>
+
+        {/* 最高記録 */}
+        <motion.div
+          className="flex-shrink-0 bg-white rounded-3xl p-4 text-center shadow-md min-w-[120px]"
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }}
+        >
+          <p className="text-gray-400 text-xs font-bold mb-1">🏆 最高連続</p>
+          <p className="text-yellow-500 font-extrabold text-5xl leading-none">{bestStreak}</p>
+          <p className="text-gray-400 text-xs mt-1">日が最高記録！</p>
+        </motion.div>
+
+        {/* 全部で */}
+        <motion.div
+          className="flex-shrink-0 bg-white rounded-3xl p-4 text-center shadow-md min-w-[120px]"
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15 }}
+        >
+          <p className="text-gray-400 text-xs font-bold mb-1">⭐ 全部で</p>
+          <p className="text-purple-500 font-extrabold text-5xl leading-none">{total}</p>
+          <p className="text-gray-400 text-xs mt-1">まいのシール！</p>
+        </motion.div>
       </div>
 
       {/* Books list */}
