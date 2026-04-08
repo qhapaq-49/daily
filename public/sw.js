@@ -1,4 +1,4 @@
-const CACHE = 'sticker-app-v1';
+const CACHE = 'sticker-app-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => {
