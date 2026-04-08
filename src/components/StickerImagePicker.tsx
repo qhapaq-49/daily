@@ -56,6 +56,7 @@ export default function StickerImagePicker({ value, onChange, assets, presetEmoj
     const reader = new FileReader();
     reader.onload = ev => onChange(ev.target?.result as string);
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const TABS: { id: Tab; label: string }[] = [

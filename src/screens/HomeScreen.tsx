@@ -162,9 +162,10 @@ export default function HomeScreen() {
         </button>
       </div>
 
-      {showAdd && <CreateChildModal onClose={() => setShowAdd(false)} />}
+      {showAdd && <CreateChildModal key="new-child" onClose={() => setShowAdd(false)} />}
       {editChild && (
         <CreateChildModal
+          key={editChild.id}
           editChild={editChild}
           onClose={() => setEditChild(undefined)}
         />
