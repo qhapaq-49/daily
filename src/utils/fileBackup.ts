@@ -42,8 +42,9 @@ type ExtHandle = FileSystemFileHandle & {
   requestPermission: (o: unknown) => Promise<string>;
 };
 
-// タブを閉じるまで有効なフラグ
+// タブを閉じるまで有効。許可済みのハンドルをキャッシュして同一インスタンスを使い回す
 let sessionGranted = false;
+let cachedHandle: FileSystemFileHandle | null = null;
 
 export async function setupBackupFile(): Promise<boolean> {
   if (!isSupported()) return false;
@@ -54,6 +55,7 @@ export async function setupBackupFile(): Promise<boolean> {
     });
     await putHandle(handle);
     sessionGranted = true;
+    cachedHandle = handle;
     return true;
   } catch { return false; }
 }
@@ -72,17 +74,19 @@ export async function activateSession(): Promise<boolean> {
   if (!handle) return false;
   try {
     const perm = await (handle as ExtHandle).requestPermission({ mode: 'readwrite' });
-    if (perm === 'granted') { sessionGranted = true; return true; }
+    if (perm === 'granted') {
+      sessionGranted = true;
+      cachedHandle = handle; // 許可済みハンドルをキャッシュ
+      return true;
+    }
     return false;
   } catch { return false; }
 }
 
 export async function writeBackupFile(data: AppData): Promise<void> {
-  if (!sessionGranted) return;
-  const handle = await getHandle();
-  if (!handle) return;
+  if (!sessionGranted || !cachedHandle) return;
   try {
-    const writable = await handle.createWritable();
+    const writable = await cachedHandle.createWritable();
     await writable.write(JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data }, null, 2));
     await writable.close();
   } catch { /* fail silently */ }
