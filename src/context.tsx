@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { AppData, Child, StickerBook, StickerEntry } from './types';
+import { writeBackupFile } from './utils/fileBackup';
 
 const STORAGE_KEY = 'sticker-app-v1';
 const BACKUP_KEY = 'sticker-app-v1-backup';
@@ -29,6 +30,7 @@ export function saveData(data: AppData) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     if (data.children.length > 0) {
       localStorage.setItem(BACKUP_KEY, JSON.stringify(data));
+      writeBackupFile(data);
     }
   } catch (e) {
     console.error('データの保存に失敗しました:', e);
