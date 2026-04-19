@@ -3,7 +3,7 @@ import Modal from './Modal';
 import { useApp } from '../context';
 import { generateCsv, downloadCsv, copyToClipboard } from '../utils/csvExport';
 import { exportJson, parseBackupFile, applyImport } from '../utils/backup';
-import { isSupported, setupBackupFile, hasBackupFile } from '../utils/fileBackup';
+import { isSupported, setupBackupFile, hasBackupFile, activateSession } from '../utils/fileBackup';
 import type { AppData } from '../types';
 
 interface Props {
@@ -19,6 +19,7 @@ export default function ExportModal({ bookId, onClose }: Props) {
   const [importData, setImportData] = useState<AppData | null>(null);
   const [importError, setImportError] = useState('');
   const [autoBackupReady, setAutoBackupReady] = useState(false);
+  const [sessionActive, setSessionActive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -118,15 +119,26 @@ export default function ExportModal({ bookId, onClose }: Props) {
             子どもの設定・シール画像・全記録を<br />まるごと保存・復元できます
           </p>
           <div className="flex flex-col gap-3">
-            {isSupported() && (
+            {isSupported() && !autoBackupReady && (
               <button
                 onClick={async () => {
                   const ok = await setupBackupFile();
-                  if (ok) setAutoBackupReady(true);
+                  if (ok) { setAutoBackupReady(true); setSessionActive(true); }
                 }}
-                className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform shadow-md text-white bg-gradient-to-r ${autoBackupReady ? 'from-green-400 to-teal-400' : 'from-pink-400 to-rose-400'}`}
+                className="w-full py-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform shadow-md text-white bg-gradient-to-r from-pink-400 to-rose-400"
               >
-                {autoBackupReady ? '✅ 自動保存設定済み（変更する）' : '🔒 自動保存ファイルを設定'}
+                🔒 自動保存ファイルを設定
+              </button>
+            )}
+            {isSupported() && autoBackupReady && (
+              <button
+                onClick={async () => {
+                  const ok = await activateSession();
+                  if (ok) setSessionActive(true);
+                }}
+                className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform shadow-md text-white bg-gradient-to-r ${sessionActive ? 'from-green-400 to-teal-400' : 'from-yellow-400 to-orange-400'}`}
+              >
+                {sessionActive ? '✅ 今日の自動保存：有効' : '▶️ 今日の自動保存を有効にする'}
               </button>
             )}
             <button
@@ -144,7 +156,7 @@ export default function ExportModal({ bookId, onClose }: Props) {
             <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleFileSelect} />
           </div>
           <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
-            {autoBackupReady ? 'シールを貼るたびに自動でファイルに上書き保存されます' : '自動保存を設定するとシールを貼るたびにファイルに保存されます'}
+            {sessionActive ? 'シールを貼るたびに自動でファイルに上書き保存されます' : autoBackupReady ? 'アプリを開いたら「今日の自動保存を有効にする」を押してください' : '設定するとシールを貼るたびにファイルに保存されます'}
           </p>
         </>
       )}

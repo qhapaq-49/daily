@@ -37,6 +37,14 @@ export function isSupported(): boolean {
   return typeof window !== 'undefined' && 'showSaveFilePicker' in window;
 }
 
+type ExtHandle = FileSystemFileHandle & {
+  queryPermission: (o: unknown) => Promise<string>;
+  requestPermission: (o: unknown) => Promise<string>;
+};
+
+// タブを閉じるまで有効なフラグ
+let sessionGranted = false;
+
 export async function setupBackupFile(): Promise<boolean> {
   if (!isSupported()) return false;
   try {
@@ -45,6 +53,7 @@ export async function setupBackupFile(): Promise<boolean> {
       types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
     });
     await putHandle(handle);
+    sessionGranted = true;
     return true;
   } catch { return false; }
 }
@@ -53,24 +62,26 @@ export async function hasBackupFile(): Promise<boolean> {
   return (await getHandle()) !== null;
 }
 
-type ExtHandle = FileSystemFileHandle & {
-  queryPermission: (o: unknown) => Promise<string>;
-  requestPermission: (o: unknown) => Promise<string>;
-};
+export function isSessionGranted(): boolean {
+  return sessionGranted;
+}
 
-let sessionPermissionGranted = false;
+// ユーザーの直接操作から呼ぶこと（ボタンのonClick等）
+export async function activateSession(): Promise<boolean> {
+  const handle = await getHandle();
+  if (!handle) return false;
+  try {
+    const perm = await (handle as ExtHandle).requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { sessionGranted = true; return true; }
+    return false;
+  } catch { return false; }
+}
 
 export async function writeBackupFile(data: AppData): Promise<void> {
+  if (!sessionGranted) return;
   const handle = await getHandle();
   if (!handle) return;
   try {
-    const h = handle as ExtHandle;
-    if (!sessionPermissionGranted) {
-      let perm = await h.queryPermission({ mode: 'readwrite' });
-      if (perm !== 'granted') perm = await h.requestPermission({ mode: 'readwrite' });
-      if (perm !== 'granted') return;
-      sessionPermissionGranted = true;
-    }
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data }, null, 2));
     await writable.close();

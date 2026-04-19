@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useApp } from '../context';
 import CreateChildModal from '../components/CreateChildModal';
 import StickerImg from '../components/StickerImg';
 import type { Child } from '../types';
+import { isSupported, hasBackupFile, isSessionGranted, activateSession } from '../utils/fileBackup';
 
 function isImage(s: string) {
   return s.startsWith('data:') || s.startsWith('http');
@@ -105,10 +106,32 @@ export default function HomeScreen() {
   const navigate = useNavigate();
   const [showAdd, setShowAdd] = useState(false);
   const [editChild, setEditChild] = useState<Child | undefined>();
+  const [showBackupBanner, setShowBackupBanner] = useState(false);
+  const [sessionActive, setSessionActive] = useState(isSessionGranted());
   const seedTestData = useSeedTestData();
+
+  useEffect(() => {
+    if (!isSupported()) return;
+    hasBackupFile().then(has => {
+      if (has && !isSessionGranted()) setShowBackupBanner(true);
+    });
+  }, []);
 
   return (
     <div className="min-h-dvh" style={{ background: 'linear-gradient(160deg, #fce4ec 0%, #f3e5f5 50%, #e8f4fd 100%)' }}>
+      {/* Backup banner */}
+      {showBackupBanner && !sessionActive && (
+        <button
+          onClick={async () => {
+            const ok = await activateSession();
+            if (ok) { setSessionActive(true); setShowBackupBanner(false); }
+          }}
+          className="w-full py-3 px-5 bg-yellow-400 text-yellow-900 font-bold text-sm text-center"
+        >
+          ⚠️ バックアップ未有効 — タップして有効にする
+        </button>
+      )}
+
       {/* Header */}
       <div className="pt-safe px-5 pt-8 pb-4 text-center">
         <h1 className="text-4xl font-extrabold" style={{
