@@ -1,14 +1,24 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { AppData, Child, StickerBook, StickerEntry } from './types';
 
 const STORAGE_KEY = 'sticker-app-v1';
+const BACKUP_KEY = 'sticker-app-v1-backup';
 
 export function loadData(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { children: [], books: [], entries: [] };
-    return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.children?.length > 0) return parsed;
+    }
+    // メインが空ならバックアップを試みる
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (backup) {
+      const parsed = JSON.parse(backup);
+      if (parsed.children?.length > 0) return parsed;
+    }
+    return raw ? JSON.parse(raw) : { children: [], books: [], entries: [] };
   } catch {
     return { children: [], books: [], entries: [] };
   }
@@ -17,6 +27,9 @@ export function loadData(): AppData {
 export function saveData(data: AppData) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (data.children.length > 0) {
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(data));
+    }
   } catch (e) {
     console.error('データの保存に失敗しました:', e);
   }
@@ -89,8 +102,13 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     saveData(data);
   }, [data]);
 
