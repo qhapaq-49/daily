@@ -53,17 +53,24 @@ export async function hasBackupFile(): Promise<boolean> {
   return (await getHandle()) !== null;
 }
 
+type ExtHandle = FileSystemFileHandle & {
+  queryPermission: (o: unknown) => Promise<string>;
+  requestPermission: (o: unknown) => Promise<string>;
+};
+
+let sessionPermissionGranted = false;
+
 export async function writeBackupFile(data: AppData): Promise<void> {
   const handle = await getHandle();
   if (!handle) return;
   try {
-    const h = handle as FileSystemFileHandle & {
-      queryPermission: (o: unknown) => Promise<string>;
-      requestPermission: (o: unknown) => Promise<string>;
-    };
-    let perm = await h.queryPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') perm = await h.requestPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') return;
+    const h = handle as ExtHandle;
+    if (!sessionPermissionGranted) {
+      let perm = await h.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') perm = await h.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') return;
+      sessionPermissionGranted = true;
+    }
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data }, null, 2));
     await writable.close();
