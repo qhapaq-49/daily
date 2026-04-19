@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>診断</title>
+<style>
+  body { font-family: monospace; padding: 16px; background: #111; color: #eee; font-size: 13px; }
+  h2 { color: #7cf; }
+  .ok { color: #7f7; }
+  .ng { color: #f77; }
+  pre { background: #222; padding: 12px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  button { margin-top: 16px; padding: 10px 20px; background: #7cf; color: #000; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>localStorage 診断</h2>
+<div id="out"></div>
+<button onclick="copyData()">データをコピー</button>
+<script>
+const KEY = 'sticker-app-v1';
+const out = document.getElementById('out');
+const raw = localStorage.getItem(KEY);
+
+let html = '';
+
+if (raw === null) {
+  html += `<p class="ng">❌ キー "${KEY}" は存在しません</p>`;
+} else {
+  html += `<p class="ok">✅ キー "${KEY}" が存在します（${raw.length} 文字）</p>`;
+  try {
+    const data = JSON.parse(raw);
+    html += `<p class="ok">✅ JSON解析OK</p>`;
+    html += `<p>子ども: ${data.children?.length ?? '?'} 件</p>`;
+    html += `<p>シール帳: ${data.books?.length ?? '?'} 件</p>`;
+    html += `<p>記録: ${data.entries?.length ?? '?'} 件</p>`;
+    html += `<pre>${JSON.stringify(data, null, 2).slice(0, 3000)}${raw.length > 3000 ? '\n...(省略)' : ''}</pre>`;
+  } catch(e) {
+    html += `<p class="ng">❌ JSON解析エラー: ${e.message}</p>`;
+    html += `<pre>${raw.slice(0, 500)}</pre>`;
+  }
+}
+
+html += '<h2>全localStorage キー一覧</h2>';
+if (localStorage.length === 0) {
+  html += '<p class="ng">何も保存されていません</p>';
+} else {
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    html += `<p>• ${k} (${localStorage.getItem(k).length} 文字)</p>`;
+  }
+}
+
+out.innerHTML = html;
+
+function copyData() {
+  const text = raw ?? '(データなし)';
+  navigator.clipboard.writeText(text).then(() => alert('コピーしました')).catch(() => {
+    prompt('手動でコピーしてください:', text);
+  });
+}
+</script>
+</body>
+</html>
